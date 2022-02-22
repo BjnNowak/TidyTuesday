@@ -10,8 +10,7 @@ gg_record(
   dir = file.path(tempdir(),"recording"), 
   device = "png", 
   width = 10, 
-  height = 5*1.618,
-  #height = 10*1.618, 
+  height = 10*1.618, 
   units = "cm", 
   dpi = 300 
 )
@@ -134,13 +133,3 @@ pr <- ggplot(reg,aes(x=year,y=PR,color=Region_Name))+
 cl/pr
 
 
-
-gg_record(
-  dir = file.path(tempdir(),"recording"), 
-  device = "png", 
-  width = 10, 
-  #height = 5*1.618,
-  height = 10*1.618, 
-  units = "cm", 
-  dpi = 300 
-)
