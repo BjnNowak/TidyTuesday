@@ -5,8 +5,8 @@ library(ggtext)
 library(glue)
 library(showtext)
 library(camcorder)
-library(patchwork)
 library(grid)
+library(cowplot)
 
 gg_record(
   dir = file.path(tempdir(),"recording"), 
@@ -22,6 +22,9 @@ font_add_google("Roboto Condensed","roboto")
 font_add_google("Oswald","oswald")
 font_add_google("Anton","anton")
 font_add_google("Bebas Neue","bebas")
+font_add_google("Francois One","fran")
+font_add_google("Acme","acme")
+font_add_google("Staatliches","staat")
 # Automatically use {showtext} for plots
 showtext_auto()
 
@@ -56,13 +59,13 @@ finish<-ranking_full%>%
   filter(finish==TRUE)
   #filter(year==2019|year==2021)
 
+# Qucik exploration of finishres per race
 expl<-finish%>%
   mutate(ct=1)%>%
   group_by(Race)%>%
   summarize(finishers=sum(ct))
 
-
-
+# Select some races
 data<-finish%>%
   filter(
     (str_detect(Race,'Western States Endurance Run')&(year==2021))|
@@ -72,11 +75,12 @@ data<-finish%>%
     #(Race=='HARDROCK 100'&(year==2018))
   )%>%
   mutate(ct=1)
-  
- 
+
 # Keep only hour to make waffle plot
 hours <- str_split_fixed(data$Time, ":", 3)[,1]
 
+# Add some combinations to have only complete cases
+# (z added as a dummy variable so all combinations are available for all races)
 clean<-data%>%
   add_column(hr=hours)%>%
   group_by(Gender,hr,Race)%>%
@@ -88,6 +92,10 @@ clean<-data%>%
   complete(Gender,Race,hr,fill=list(val=1))%>%
   drop_na()
 
+# Make main plot
+################
+
+# To add hours as facet in ggplot
 facet_labeller <- function(var){
   c('',
     '15',
@@ -115,23 +123,15 @@ facet_labeller <- function(var){
   )
 }
 
+# Set fill and color palette
+# (alpha = 0 to hide dummy z variable)
 col_men<-'#00a091'
 col_women<-'#f18f01'
-col_z <- 'white'
 
 pal <- c(
   'M' = col_men,
   'W' = col_women,
   'Z' = alpha('black', 0)
-)
-
-
-alpha(col_men, 0.2)
-
-alpha_scale <- c(
-  'M'=1,
-  'W'=1,
-  'Z'=0
 )
 
 pal_col<- c(
@@ -140,11 +140,11 @@ pal_col<- c(
   'Z'=alpha('black',0)
 )
 
+# Order race names
 clean$Race <- as.factor(clean$Race)
 clean$Race<-fct_relevel(clean$Race,"Western States Endurance Run",'Leadville Trial 100 Run', 'UTMB®','La Diagonale Des Fous')
 
-
-
+# Make plot
 whole<-ggplot(
   clean,
   aes(fill=Gender,color=Gender,values=val))+
@@ -161,7 +161,6 @@ whole<-ggplot(
   coord_equal()+
   labs(
     x= "Finishing time (hours)"
-    #caption = '**Data** ITRA **| Plot** @BjnNowak'
   )+
   theme_minimal()+
   theme(
@@ -176,16 +175,14 @@ whole<-ggplot(
   )+
   guides(fill='none',color='none')
 
-whole
+# Now with labels and background
+################################
 
-library(cowplot)
-#library(magick)
-#library(png)
-
+# Prep labels
 name_races <- tibble(
   name = c('Western States 2021','Leadville 2019','UTMB 2021','Diagonale des Fous 2019'),
   x=rep(0.07,4),
-  y=c(0.9,0.7,0.47,0.2)
+  y=c(0.89,0.69,0.48,0.27)
 )
 
 details <- tibble(
@@ -193,8 +190,9 @@ details <- tibble(
     'Olympic Valley, California, USA\nElevation gain: 5,600m', 'Leadville, Colorado, USA\nElevation gain: 4,800m', 'Chamonix, France\nElevation gain: 10,000m', 'Saint-Piere, La Réunion, France\nElevation gain: 10,210m')
 )
 
-
-
+# Prep background colors
+col_day1 <- '#FDFFD6'
+col_day2 <- '#FAFF97'
 col_day3 <- '#F7FF58'
 
 x1 <- 21/4.175
@@ -206,7 +204,7 @@ rect1 <- rectGrob(
   width = unit(x1, "cm"),
   height = unit(21*1.6, "cm"),
   hjust = 0, vjust = 0,
-  gp = gpar(fill = col_day3, alpha = 0.2,col=NA)
+  gp = gpar(fill = col_day1, alpha = 1,col=NA)
 )
 
 rect2 <- rectGrob(
@@ -215,7 +213,7 @@ rect2 <- rectGrob(
   width = unit(21-x2-x1, "cm"),
   height = unit(21*1.6, "cm"),
   hjust = 0, vjust = 0,
-  gp = gpar(fill = col_day3, alpha = 0.55,col=NA)
+  gp = gpar(fill = col_day2, alpha = 1,col=NA)
 )
 
 rect3 <- rectGrob(
@@ -224,7 +222,7 @@ rect3 <- rectGrob(
   width = unit(x2, "cm"),
   height = unit(21*1.6, "cm"),
   hjust = 1, vjust = 0,
-  gp = gpar(fill = col_day3, alpha = 0.9,col=NA)
+  gp = gpar(fill = col_day3, alpha = 1,col=NA)
 )
 
 ggdraw()+
@@ -251,8 +249,13 @@ chart, each dot represents one finisher for\n
 four of these races. Generally organized in\n
 mountainous areas, ultratrail running races\n
 have important elevation changes and\n
-finishing times depend greatly on the\n
-elevation gain.\n", 
+finishing times depend on the elevation \n
+gain and type of trails of each race. 
+\n
+On flat roads, world\n
+record for the distance\n
+is 10h51min and belongs\n
+to Aleksandr Sorokin.\n", 
     x=0.92,y=name_races$y[1]-0.15,
     hjust=1,vjust=1,lineheight=0.20,
     color = "black", size = 50, 
@@ -260,7 +263,7 @@ elevation gain.\n",
   draw_text(
 "Data: ITRA\n
 Plot: @BjnNowak", 
-    x=0.92,y=0.525,
+    x=0.92,y=0.41,
     hjust=1,vjust=1,lineheight=0.20,
     color = "black", size = 40,alpha=0.8, 
     family = 'roboto')+
@@ -269,7 +272,7 @@ Plot: @BjnNowak",
     x=name_races$x,y=name_races$y,
     hjust=0,vjust=1,lineheight=0.35,
     color = "black", size = 60, 
-    family = 'oswald',fontface='bold')+
+    family = 'fran',fontface='bold')+
   draw_text(
     "Women", 
     x=0.56,y=0.525,
@@ -290,7 +293,33 @@ Plot: @BjnNowak",
     family = 'roboto')+
   draw_text(
     c('Day 1','Day 2','Day 3'), 
-    x=c(0.10,0.40,0.78),y=name_races$y[4]+0.07,
+    x=c(0.13,0.44,0.81),y=0.95,
+    hjust=0.5,vjust=1,lineheight=0.35,
+    color = "#54494B", 
+    size=100,alpha=0.2,
+    family = 'staat',fontface='bold')+
+  draw_line(x=c(0.1975,0.1975),y=c(0.3175,0.365),size=0.5,color="#54494B",alpha=0.8)+
+  draw_text(
+"Courtney Dauwalter
+22h30 (Women race record)", 
+    x=0.1975,y=0.375,
+    hjust=0,vjust=0,lineheight=0.35,
+    color = col_women, size = 35, 
+    family = 'oswald')+
+  draw_line(x=c(0.0572,0.0572),y=c(0.743,0.77),size=0.5,color="#54494B",alpha=0.8)+
+  draw_text(
+"Jim Walmsley
+14h46 (Third win in the race)", 
+      x=0.0572,y=0.78,
+      hjust=0,vjust=0,lineheight=0.35,
+      color = col_men, size = 35, 
+      family = 'oswald')+
+  
+  draw_text(
+    "Hot and wet climate of Reunion Island\nis an additional difficulty\nfor this race", 
+    x=name_races$x[4],y=name_races$y[4]-0.085,
     hjust=0,vjust=1,lineheight=0.35,
-    color = "#54494B", size = 75,alpha=1, 
-    family = 'bebas',fontface='bold')
+    color = "black", size = 40,fontface='italic', 
+    family = 'roboto')
+
+
