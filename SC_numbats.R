@@ -110,13 +110,16 @@ grid_sf$ct<-lengths(st_intersects(grid_sf, sf_num_aus))
 # extract centroid to label hexagons
 grid_pts<-grid_sf%>%st_centroid()
 
+
+
+
 ###############################################"""
 
 # make plot
 
-tit_leg<-"<b>Normalized Difference Vegetation Index (NDVI)</b><br><span style='font-size:46px; font-weight:light; color:white;'>High  NDVI  values  indicate  well  developed  vegetation  cover</span>"
+tit_leg<-"<b>Normalized Difference Vegetation Index (NDVI)</b><br><span style='font-size:38px; font-weight:light; color:white;'>High  NDVI  values  indicate  well  developed  vegetation  cover</span>"
 
-ggplot() +
+p1<-ggplot() +
   #geom_sf(australia,mapping=aes(geometry=geometry))+
   tidyterra::geom_spatraster(
     data = ndvi_terra_clean%>%drop_na() , aes(fill = pal),
@@ -161,12 +164,83 @@ ggplot() +
   
   labs(
     fill=tit_leg,
-    title="Numbat repartition is not related to vegetation",
-    subtitle="The **values in the hexagons** show the **number of numbats observations** since 1856",
-    caption="**Data** Atlas of Living Australia and MODIS | **Plot** @BjnNowak"
+    #title="Numbat repartition is not related to vegetation",
+    subtitle="a. The **values in the hexagons** show<br>the **number of numbats observations** since 1856",
+    #caption="**Data** Atlas of Living Australia and MODIS | **Plot** @BjnNowak"
   )+
   guides(alpha="none")+
   
+  theme_void()+
+  theme(
+    plot.background = element_rect(fill="#295270",color=NA),
+    plot.margin = margin(1,0.75,1,0.75,"cm"),
+    legend.position="bottom",
+    legend.spacing.x = unit(0.1, 'cm'),
+    legend.title=element_markdown(
+      size=36,family = "out",
+      hjust=0.5,lineheight = 0.4,color="white",
+      margin=margin(0,0,-0.25,0,"cm")
+    ),
+    legend.text=element_text(
+      size=28,family = "out",hjust=0.5,
+      color="white",
+      lineheight = 0.5,margin=margin(-0.25,0,0,0,"cm")
+    ),
+    plot.title = element_text(
+      size=80,family = "staat",hjust=0.5,
+      color="white",face="bold",
+      lineheight = 0.5,margin=margin(0.25,0,0,0,"cm")
+    ),
+    plot.subtitle = element_markdown(
+      size=30,family = "fira sans",hjust=0,
+      color="white",
+      lineheight = 0.5,margin=margin(0,0,1,0,"cm")
+    ),
+    plot.caption=element_markdown(
+      size=30,family = "pro",
+      hjust=0.5,lineheight = 0.5,color="white",
+      margin=margin(0.8,0,0,0,"cm")
+    )
+  )
+  
+
+#############################################
+
+# reg zooms
+
+buff_max<-grid_pts%>%filter(ct==max(ct)|ct==176|ct==30)%>%st_buffer(100000)
+
+buff_max<-grid_sf%>%filter(ct==max(ct)|ct==176|ct==30)
+
+p2<-ggplot() +
+  #geom_sf(australia,mapping=aes(geometry=geometry))+
+  tidyterra::geom_spatraster(
+    data = ndvi_terra_clean%>%crop(buff_max,mask=TRUE)%>%drop_na() , aes(fill = pal),
+    na.rm = TRUE
+  )+
+  #geom_sf(sf_num,mapping=aes(geometry=geometry),size=3,alpha=0.1)+
+  geom_sf(
+    sf_num_aus%>%st_crop(buff_max),
+    mapping=aes(geometry=geometry),
+    size=1,color="white"
+  )+
+  geom_sf_text(
+    buff_max,
+    mapping=aes(geometry=grid_aus,alpha=ct,label=ct),
+    family="fira",size=9,color="black"
+  )+
+  geom_sf(
+    buff_max,
+    mapping=aes(geometry=grid_aus),
+    fill=NA,color="dimgrey"
+  )+
+  #geom_raster(data = ndvi_df%>%filter(NDVI>0) , aes(x = x, y = y, fill = pal))  
+  
+  scale_alpha(range = c(0.4, 1))+
+  scale_fill_manual(
+    values=pal_nd, na.value = NA
+  )+
+  guides(fill="none",alpha="none")+
   theme_void()+
   theme(
     plot.background = element_rect(fill="#295270",color=NA),
@@ -199,6 +273,39 @@ ggplot() +
       margin=margin(0.8,0,0,0,"cm")
     )
   )
-  
 
-  
+p2 
+
+
+# Plot size
+gg_record(
+  dir = file.path(tempdir(),"recording"), 
+  device = "png", 
+  width = 20, 
+  height = 20, 
+  units = "cm", 
+  dpi = 300 
+)
+
+p1 + p2 + 
+  plot_layout(guides = 'collect')+
+  plot_annotation(
+    title="Numbat repartition is not related to vegetation",
+    caption = "**Data** Atlas of Living Australia and MODIS | **Plot** @BjnNowak",
+    theme = theme(
+      plot.title = element_text(
+        size=80,family = "staat",hjust=0.5,
+        color="white",face="bold",
+        lineheight = 0.5,margin=margin(0.25,0,0,0,"cm")
+      ),
+      plot.caption=element_markdown(
+        size=30,family = "pro",
+        hjust=0.5,lineheight = 0.5,color="white",
+        margin=margin(0,0,0,0,"cm")
+      )
+    )
+  )&
+  theme(
+    plot.background = element_rect(fill="#295270",color=NA),
+    legend.position="bottom"
+  )
