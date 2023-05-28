@@ -85,7 +85,7 @@ tib<-tibble(
 
 # to add ticks to plot
 tck<-tibble(
-  y=seq(0.6,0.1,0.1)
+  y=seq(0.5,0.9,0.1)
 )
 
 
@@ -106,19 +106,19 @@ for (i in 1:12){
 pl<-ggplot()+
   annotate(
     "text",x=20,
-    y=.99,label="Vegetation\nin Ireland",
+    y=.89,label="Vegetation\nin Ireland",
     family="ral",size=16,hjust=0,
     color="white",fontface="bold",
     lineheight=0.45
   )+
   annotate(
     "text",x=20,
-    y=.95,label=tib$season[i],
+    y=.85,label=tib$season[i],
     family="ral",size=13,hjust=0,
     color="forestgreen",fontface="bold"
   )+
   annotate(
-    "segment",x=-20,xend=-20,y=.4,yend=.8,lwd=0.25,
+    "segment",x=-20,xend=-20,y=.5,yend=.9,lwd=0.25,
     color="white"
   )+
   annotate(
@@ -155,7 +155,7 @@ pl<-ggplot()+
     mapping=aes(x=day,y=NDVI),color="forestgreen",lwd=1.5
   )+
   
-  scale_y_continuous(limits=c(0.4,0.8))+
+  scale_y_continuous(limits=c(0.5,0.9))+
   scale_x_continuous(limits=c(-80,365))+
   theme_void()
 
