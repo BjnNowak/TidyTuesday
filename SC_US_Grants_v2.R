@@ -103,13 +103,17 @@ cap<-tibble(
 )
 
 # Set colors
-bck <- "#192A51"
+#bck <- "#192A51"
+bck <- "#0A3161"
+  
 bar <- "#ef476f"
 lab <- "#ffd166"
 
 tit<-"white"
 
-pal<-c("#ad336d","#f8997d")
+#pal<-c("#ad336d","#f8997d")
+# Changing color palette here to mimick US flag
+pal<-rev(c("#B31942","#ffffff"))
 
 ggplot(clean_list)+
   annotate(
@@ -130,17 +134,19 @@ ggplot(clean_list)+
   ) +
   geom_rect(aes(xmin=0,xmax=1,ymin=-(cum_sm-sm),ymax=-cum_sm,fill=fl))+
   geom_richtext(
-    aes(x=0.05,y=-cum_sm+sm/2,label=lab, size=sm),
+    aes(x=0.05,y=-cum_sm+sm/2,label=lab, size=sm,color=fl),
     family="ral",
     #size=12,
     hjust=0,lineheight=0.45,
-    vjust=0.5, color="white",
+    vjust=0.5, 
+    #color="white",
     fill = NA, label.color = NA, 
     label.padding = grid::unit(rep(0, 4), "pt") 
   ) +
-  guides(fill='none',size='none')+
+  guides(fill='none',size='none',color="none")+
   scale_size(range=c(8,33))+
   scale_fill_manual(values=pal)+
+  scale_color_manual(values=rev(pal))+
   theme_void()+
   theme(
     plot.margin=margin(0.5,0.2,0,0.5,"cm"),
