@@ -6,25 +6,23 @@ library(ggtext)
 library(waffle)
 
 # Set fonts
-font_add_google("Bebas Neue","beb")
 font_add_google("Staatliches","sta")
 font_add_google("Raleway","ral")
-font_add_google("Bitter","bit")
-font_add_google("Fira Sans","fira")
-font_add_google("Jost","jost")
 showtext_auto()
 
 # Plot size
 gg_record(
   dir = file.path(tempdir(),"recording"), 
   device = "png", 
-  height = 6.75*2, 
-  width = 12*2, 
+  height = 13.5, 
+  width = 16, 
   units = "cm", 
   dpi = 300 
 )
 
-data<-read_csv('Data/share-cereals-animal-feed.csv')%>%
+# Data uploaded from OWID :
+# https://ourworldindata.org/grapher/share-cereals-animal-feed
+data<-read_csv('https://raw.githubusercontent.com/BjnNowak/TidyTuesday/main/data/share-cereals-animal-feed.csv')%>%
   filter(Year==2021)%>%
   filter(Entity%in%c('Asia (FAO)','Africa (FAO)','Europe (FAO)','Americas (FAO)','Oceania (FAO)'))
 
